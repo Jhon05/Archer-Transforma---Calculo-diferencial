@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ArcoTransforma v43 | Transformación de funciones</title>
+  <meta name="description" content="Juego educativo 2D de tiro con arco para reforzar la transformación de funciones de una variable en cálculo diferencial.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]],
+        processEscapes: true,
+        processEnvironments: true,
+        tags: "none"
+      },
+      options: {
+        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      },
+      svg: { fontCache: "global" },
+      startup: { typeset: true }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <div id="alwaysClock" class="always-clock" aria-label="hora actual"><span class="clock-dot"></span><b id="alwaysClockText">--:--:--</b></div>
+
+  <div id="fullscreenBlock" class="fullscreen-block hidden" role="alertdialog" aria-live="assertive" aria-label="Bloqueo de seguridad">
+    <div class="fullscreen-card">
+      <div class="security-shield">🛡️</div>
+      <p class="eyebrow">Modo seguro de evaluación</p>
+      <h2>La partida debe continuar en pantalla completa</h2>
+      <p id="fullscreenBlockMessage">La partida está pausada. Para continuar debes volver a pantalla completa.</p>
+      <div class="security-block-counter">Bloqueos: <strong id="securityBlockCounter">0/5</strong></div>
+      <div id="securityTeacherRow" class="security-teacher-row hidden">
+        <label for="securityTeacherPass">Contraseña docente <strong>****</strong></label>
+        <input id="securityTeacherPass" class="security-input" type="password" autocomplete="off" placeholder="Ingresa la contraseña docente">
+        <small id="securityPassMsg" class="security-pass-msg"></small>
+      </div>
+      <button id="resumeFullscreenBtn" class="primary big" type="button">Volver a pantalla completa</button>
+      <small>La partida se bloquea al salir de pantalla completa, cambiar de pestaña, minimizar o usar clic derecho. Cada reingreso requiere contraseña docente. Al quinto bloqueo, la nota queda en 0.</small>
+    </div>
+  </div>
+  <div id="securityToast" class="security-toast hidden" aria-live="polite"></div>
+
+  <section id="startScreen" class="start-screen">
+    <div class="start-card simple-start-card">
+      <p class="eyebrow">Videojuego educativo · Cálculo diferencial</p>
+      <h1>ArcoTransforma</h1>
+      <p class="simple-start-subtitle">Apunta, dispara y supera retos de transformación de funciones.</p>
+
+      <div class="simple-start-grid">
+        <section class="simple-avatar-panel" aria-label="Avatar del juego">
+          <div class="simple-avatar-frame">
+            <img class="simple-avatar-image" src="avframes/explorador/preview.png" alt="Arquero élfico de ArcoTransforma">
+          </div>
+          <strong>Arquero élfico</strong>
+          <small>Avatar activo</small>
+          <input type="radio" name="avatar" value="explorador" checked hidden aria-hidden="true">
+        </section>
+
+        <section class="simple-access-panel" aria-label="Datos para iniciar la partida">
+          <label class="password-label" for="playerName">Nombre del jugador o equipo</label>
+          <input id="playerName" type="text" autocomplete="off" maxlength="60" placeholder="Escribe tu nombre">
+
+          <label class="password-label" for="accessCode">Contraseña de acceso</label>
+          <input id="accessCode" type="password" autocomplete="off" placeholder="Ingresa la contraseña">
+
+          <p id="accessError" class="access-error hidden">Contraseña incorrecta. Intenta de nuevo.</p>
+          <button id="btnStart" class="primary big" type="button">Iniciar en pantalla completa</button>
+          <small class="simple-security-note">Durante la partida se bloquean la salida de pantalla completa, la minimización, el cambio de pestaña y el clic derecho.</small>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <main id="gameShell" class="game-shell hidden">
+    <header class="game-header compact-topbar">
+      <div class="topbar-brand">
+        <p class="eyebrow">ArcoTransforma</p>
+        <h2 id="worldTitle">Bosque del Dominio</h2>
+      </div>
+      <section class="teacher-topbar" aria-label="Seguimiento docente integrado">
+        <span class="player-pill topbar-player"><img id="selectedAvatarTop" class="selected-avatar-top" src="avframes/explorador/preview.png" alt="Avatar seleccionado"><span><b>Jugador</b><em id="playerInfo">-</em></span></span>
+        <span class="topbar-message"><b>Estado</b><em id="messageBox">Ajusta ángulo y velocidad.</em></span>
+      </section>
+      <div class="topbar-side">
+        <div class="game-actions">
+          <button id="btnGuide" class="ghost">Guía</button>
+          <button id="btnReport" class="ghost">Reporte</button>
+          <button id="btnFinish" class="ghost danger-ghost">Finalizar</button>
+          <button id="btnReset" class="ghost">Reiniciar</button>
+          <button id="btnExitFullscreen" class="ghost">Pantalla completa</button>
+        </div>
+        <section class="topbar-stats" aria-label="Indicadores de sesión">
+          <span class="stat-box"><b>Tiempo</b><em id="sessionTime">00:00</em></span>
+          <span class="stat-box"><b>Aciertos</b><em id="correctInfo">0</em></span>
+          <span class="stat-box"><b>Errores</b><em id="wrongInfo">0</em></span>
+          <span class="stat-box security-stat"><b>Bloqueos</b><em id="blockInfo">0/5</em></span>
+        </section>
+      </div>
+    </header>
+
+    <section class="scene-card">
+      <canvas id="gameCanvas" width="1280" height="720" tabindex="0" aria-label="Escenario de ArcoTransforma"></canvas>
+
+      <section class="hud-panel" aria-label="Información de juego">
+        <span><b>Mundo</b><em id="worldLabel">1/5</em></span>
+        <span><b>Nota</b><em><i id="scoreLabel">0.00</i>/5.00</em></span>
+        <span><b>Reto tiro</b><em><i id="shotProgressLabel">0.0</i>/<i id="shotGoalLabel">1</i></em></span>
+        <span><b>Flechas</b><em id="arrowsLabel">80</em></span>
+        <span><b>Nota mundo</b><em><i id="worldGradeLabel">1.00</i>/1.00</em></span>
+        <span><b>Distancia</b><em><i id="distanceLabel">-</i> m</em></span>
+        <span><b>Altura</b><em><i id="heightLabel">-</i> m</em></span>
+        <span><b>Radio</b><em><i id="radiusLabel">-</i> px</em></span>
+      </section>
+
+      <section class="controls-panel" aria-label="Controles de lanzamiento">
+        <div class="control-row"><label>Ángulo ↑/↓</label><strong><span id="angleValue">0</span>°</strong><input id="angle" type="range" min="-45" max="70" value="0" tabindex="-1"></div>
+        <div class="control-row"><label>Velocidad ←/→</label><strong><span id="speedValue">0</span> m/s</strong><input id="speed" type="range" min="0" max="170" value="0" tabindex="-1"></div>
+        <button id="btnShoot" class="primary shoot-btn">Disparar <small>Espacio</small></button>
+      </section>
+
+      <div id="worldAnnouncement" class="world-announcement hidden" role="dialog" aria-live="assertive">
+        <div class="announcement-card">
+          <p class="eyebrow">Nuevo mundo</p>
+          <h2 id="announceTitle">Mundo</h2>
+          <p id="announceText">Texto</p>
+          <button id="btnAnnounceStart" class="primary">Iniciar lanzamientos</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <dialog id="questionDialog" class="modal">
+    <form id="questionForm" novalidate>
+      <p class="eyebrow dark" id="questionType">Pregunta</p>
+      <h2 id="questionTitle">Pregunta</h2>
+      <section id="sequenceProgress" class="sequence-progress" aria-label="Progreso de la microsecuencia"></section>
+      <div id="questionBody" class="question-body"></div>
+      <div id="hintBox" class="hint-box hidden"></div>
+      <div class="modal-actions">
+        <button type="button" id="btnHint" class="ghost modal-ghost">Pista</button>
+        <button type="button" id="btnSubmitAnswer" class="primary">Responder</button>
+      </div>
+      <div id="feedbackBox" class="feedback hidden"></div>
+      <button type="button" id="btnContinue" class="primary hidden">Continuar</button>
+    </form>
+  </dialog>
+
+  <dialog id="guideDialog" class="modal guide">
+    <form method="dialog">
+      <h2>Guía rápida</h2>
+      <p><strong>Modo seguro obligatorio:</strong> desde el inicio hasta finalizar, el juego debe permanecer en pantalla completa. Minimizar, cambiar de pestaña, salir de pantalla completa o usar clic derecho genera un bloqueo que requiere la contraseña docente. Al quinto bloqueo, la nota será 0.</p>
+      <p><strong>Reto de tiro:</strong> cada mundo contiene una microsecuencia de cuatro retos. Antes de cada pregunta debes completar el reto de tiro. Centro = 1 punto; borde = 0.5 puntos.</p>
+      <p><strong>Nota:</strong> el reto de tiro no suma nota. Cada una de las cuatro preguntas vale hasta 0.25; el mundo completo vale 1.0. Cada tiro fallido resta 0.10 a la nota posible del mundo y cada respuesta incorrecta resta 0.20 adicional.</p>
+      <p><strong>Controles:</strong> ↑/↓ cambian el ángulo; ←/→ cambian la velocidad; espacio dispara. Si fallas, repites el mismo blanco. Si impactas y aún falta puntaje, cambia distancia, altura, color y tamaño. Las preguntas usan notación LaTeX y se renderizan con MathJax.</p>
+      <button class="primary">Cerrar</button>
+    </form>
+  </dialog>
+
+  <dialog id="reportDialog" class="modal report-modal">
+    <form method="dialog">
+      <div class="report-head">
+        <div>
+          <p class="eyebrow dark">Reporte docente</p>
+          <h2>Reporte de partida</h2>
+        </div>
+        <button type="button" id="btnCloseReport" class="ghost modal-ghost">Cerrar</button>
+      </div>
+      <div id="reportContent" class="report-content"></div>
+      <div class="modal-actions">
+        <button type="button" id="btnDownloadHtml" class="primary">Descargar nuevamente el informe HTML</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="scorm.js"></script>
+  <script src="game.js"></script>
+  <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>
+</body>
+</html>

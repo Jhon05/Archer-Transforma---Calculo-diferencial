@@ -1,0 +1,9 @@
+{
+  "name": "ArcoTransforma · Funciones Quest v43",
+  "short_name": "ArcoTransforma",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "background_color": "#061326",
+  "theme_color": "#061326",
+  "description": "Juego educativo de tiro con arco para cálculo diferencial con pantalla completa, bloqueos de seguridad e informe HTML automático."
+}
